@@ -1,0 +1,17 @@
+{
+	"extends": "@repo/typescript-config/base.json",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"module": "ESNext",
+		"paths": {
+			"#/*": ["./src/*"],
+			"@/*": ["./src/*"]
+		},
+		"moduleResolution": "Bundler",
+		"noEmit": true,
+		"strictNullChecks": true,
+		"types": ["vite/client"]
+	},
+	"include": ["src", "vite.config.ts"],
+	"exclude": ["node_modules"]
+}

@@ -1,0 +1,70 @@
+# Docker build context is the monorepo root, set by the CDK constructs in
+# apps/infra/lib/construct/{web,api}.ts.
+#
+# This file is not just a build-speed optimisation. CDK hashes every file left
+# in the context and uses that hash as the ECR image tag, so anything included
+# here that changes between deploys yields a new tag, a new task definition and
+# a rolling ECS deployment. Keeping the context minimal is what makes `cdk
+# deploy` a no-op when the application code has not changed.
+#
+# Strategy: deny everything, then re-include only what the Dockerfiles COPY.
+# This fails closed — a new tool directory at the repo root (.venv, .vscode, a
+# cache dir) is excluded by default instead of silently invalidating both
+# images.
+#
+# Two rules of the matcher to keep in mind when editing:
+#   1. `*` matches a single path segment, so it only denies top-level entries.
+#      Deeper levels need their own `dir/*` line.
+#   2. CDK prunes an ignored directory without descending into it, so a
+#      negation is only reachable if every ancestor directory is re-included
+#      first. Hence the `!apps` / `apps/*` / `!apps/api` laddering below.
+
+########################################
+# 1. Deny everything at the repo root.
+########################################
+*
+
+########################################
+# 2. Root manifests. Both Dockerfiles copy these to prime `bun install`.
+########################################
+!package.json
+!bun.lock
+!turbo.json
+
+########################################
+# 3. apps/ — only the two application packages.
+#    apps/infra is the CDK app: editing infra code must not rebuild the
+#    images, so keep nothing but its manifest, which bun needs to resolve
+#    the workspace.
+########################################
+!apps
+apps/*
+!apps/api
+!apps/web
+!apps/infra
+apps/infra/*
+!apps/infra/package.json
+
+########################################
+# 4. packages/ — every workspace member, copied wholesale by both builds.
+########################################
+!packages
+
+########################################
+# 5. Re-deny generated and local-only files inside the subtrees kept above.
+#    These come last so they win over the negations.
+########################################
+**/node_modules
+**/.turbo
+**/.output
+**/.nitro
+**/.tanstack
+**/dist
+**/coverage
+**/.vite
+**/.cache
+**/.env*
+**/*.log
+**/*.tsbuildinfo
+**/.DS_Store
+**/README.md

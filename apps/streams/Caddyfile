@@ -1,0 +1,57 @@
+# Durable Streams server configuration.
+# https://durablestreams.com/deployment#self-hosted-with-caddy
+#
+# Listens on a plain port (no automatic TLS): TLS terminates at CloudFront and
+# the ALB forwards /sync/* here over HTTP.
+#
+# Environment:
+#   AUTH_UPSTREAM  host:port of the API service. Browser reads are admitted
+#                  only when GET {AUTH_UPSTREAM}/auth/verify (forward_auth,
+#                  carrying the request's Better Auth session cookie) is 2xx.
+#   WRITER_TOKEN   shared secret the API presents as a bearer token on
+#                  /v1/stream/* to create, append to and close streams.
+{
+	admin off
+	auto_https off
+}
+
+:4437 {
+	# One route block so directives run strictly in the order written.
+	route {
+		# Liveness for ECS / docker healthchecks.
+		respond /health "ok" 200
+
+		# Browser reads arrive from the ALB (or the Vite dev proxy) as
+		# /sync/assessments/<id>/<source>. Read-only, session-checked, then
+		# rewritten onto the protocol endpoint. Caddy holds the long-lived
+		# SSE/long-poll connection itself; the API only answers the auth check.
+		route /sync/assessments/* {
+			@mutation not method GET HEAD
+			respond @mutation 405
+			forward_auth {env.AUTH_UPSTREAM} {
+				uri /auth/verify
+			}
+			vars authenticated_read true
+			uri strip_prefix /sync
+			rewrite * /v1/stream{uri}
+		}
+
+		# Anything else reaching the protocol endpoint must be the writer.
+		@unauthenticated {
+			path /v1/stream/*
+			not vars authenticated_read true
+			not header Authorization "Bearer {env.WRITER_TOKEN}"
+		}
+		respond @unauthenticated 401
+
+		route /v1/stream/* {
+			durable_streams {
+				data_dir /data
+				long_poll_timeout 30s
+			}
+		}
+
+		# Caddy's default for an unmatched request is an empty 200; be explicit.
+		respond 404
+	}
+}

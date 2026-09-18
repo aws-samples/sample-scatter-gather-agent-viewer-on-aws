@@ -1,0 +1,14 @@
+# dependencies
+/node_modules
+
+# CDK
+cdk.out/
+cdk.context.json
+cdk.context.json.bak
+
+# build output
+/dist
+*.tsbuildinfo
+
+# misc
+.DS_Store

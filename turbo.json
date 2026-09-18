@@ -1,0 +1,78 @@
+{
+	"$schema": "https://turborepo.dev/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": ["dist/**", ".output/**"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"check-types": {
+			"dependsOn": ["^check-types"]
+		},
+		"synth": {
+			"outputs": ["cdk.out/**"],
+			"env": ["CDK_DEFAULT_ACCOUNT", "CDK_DEFAULT_REGION", "AWS_PROFILE", "AWS_REGION"]
+		},
+		"diff": {
+			"cache": false,
+			"env": ["CDK_DEFAULT_ACCOUNT", "CDK_DEFAULT_REGION", "AWS_PROFILE", "AWS_REGION"]
+		},
+		"deploy": {
+			"cache": false,
+			"interactive": true,
+			"env": ["CDK_DEFAULT_ACCOUNT", "CDK_DEFAULT_REGION", "AWS_PROFILE", "AWS_REGION"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+
+		"//#setup": {
+			"cache": false,
+			"env": ["STACK_NAME", "AWS_REGION"],
+			"passThroughEnv": ["AWS_*", "HOME"]
+		},
+		"//#db:up": {
+			"cache": false,
+			"env": ["POSTGRES_PORT"],
+			"passThroughEnv": ["DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"]
+		},
+		"//#db:down": {
+			"cache": false,
+			"env": ["POSTGRES_PORT"],
+			"passThroughEnv": ["DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"]
+		},
+		"//#db:reset": {
+			"cache": false,
+			"env": ["POSTGRES_PORT"],
+			"passThroughEnv": ["DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"]
+		},
+		"db:generate": {
+			"cache": false,
+			"interactive": true,
+			"env": ["DATABASE_URL"]
+		},
+		"db:migrate": {
+			"cache": false,
+			"env": ["DATABASE_URL"]
+		},
+		"db:push": {
+			"cache": false,
+			"interactive": true,
+			"env": ["DATABASE_URL"]
+		},
+		"db:pull": {
+			"cache": false,
+			"env": ["DATABASE_URL"]
+		},
+		"db:studio": {
+			"cache": false,
+			"persistent": true,
+			"env": ["DATABASE_URL"]
+		}
+	}
+}

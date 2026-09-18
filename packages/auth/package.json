@@ -1,0 +1,16 @@
+{
+  "name": "@repo/auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@repo/database": "workspace:*",
+    "better-auth": "^1.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3"
+  }
+}

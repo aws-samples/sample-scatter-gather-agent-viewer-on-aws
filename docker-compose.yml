@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: scatter-gather-viewer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      # Local dev container only, never deployed.
+      POSTGRES_PASSWORD: postgres  # pragma: allowlist secret
+      POSTGRES_DB: app
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Durable Streams server: live assessment output. Same image the stack
+  # deploys (apps/streams). The API writes with WRITER_TOKEN; browser reads
+  # on /sync/* are forward_auth'd to the API dev server on the host.
+  durable-streams:
+    build: ./apps/streams
+    container_name: scatter-gather-viewer-durable-streams
+    restart: unless-stopped
+    environment:
+      WRITER_TOKEN: local-dev-writer-token  # pragma: allowlist secret
+      AUTH_UPSTREAM: host.docker.internal:4000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${DURABLE_STREAMS_PORT:-4437}:4437"
+
+volumes:
+  postgres_data:

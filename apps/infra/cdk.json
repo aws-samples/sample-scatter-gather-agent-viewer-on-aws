@@ -1,0 +1,8 @@
+{
+	"app": "bunx tsx bin/infra.ts",
+	"watch": {
+		"include": ["bin/**", "lib/**"],
+		"exclude": ["node_modules", "cdk.out", "dist"]
+	},
+	"context": {}
+}
